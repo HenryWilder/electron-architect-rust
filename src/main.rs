@@ -1,4 +1,10 @@
 use raylib::prelude::*;
+mod coords;
+mod graph;
+mod node;
+mod wire;
+
+use {coords::*, graph::*, node::*, wire::*};
 
 const CURSOR_WIDTH: f32 = 2.0;
 const CURSOR_SIZE: Vector2 = Vector2 {
@@ -18,6 +24,9 @@ fn main() {
         .build();
 
     rl.hide_cursor();
+
+    let mut graph = Graph::new();
+    graph.add_node(Gate::Buffer, Coords { x: 2, y: 2 });
 
     while !rl.window_should_close() {
         // Tick
