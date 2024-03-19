@@ -1,37 +1,50 @@
+use crate::text_scroller::TextScroller;
+
 pub struct Console {
     stream: String,
+    scroller: TextScroller,
 }
 
 impl Console {
     pub fn new() -> Self {
+        let stream = String::new();
         Self {
-            stream: String::new(),
+            stream,
+            scroller: TextScroller::new(10),
         }
     }
 
-    pub fn get_lines<'idk>(&'idk self, offset: usize, lines: usize) -> &'idk str {
-        let mut lines_iter = self.stream.match_indices('\n');
-        let n = lines_iter.clone().count();
+    pub fn read(&self) -> &str {
+        let start = self
+            .stream
+            .lines()
+            .enumerate()
+            .nth(self.scroller.start_line);
 
-        if self.stream.ends_with('\n') {
-            lines_iter.next_back(); // Don't count terminating newline
-        }
+        let end = self.stream.lines().enumerate().nth(self.scroller.end_line);
 
-        let start_iter: Option<(usize, &str)> = lines_iter.clone().nth_back(offset + lines);
-        let start: usize = match start_iter {
-            Some((index, _)) => index + 1,
+        let start_index: usize = match start {
+            Some((i, _)) => i,
             None => 0,
         };
 
-        let end_iter: Option<(usize, &str)> = lines_iter.clone().nth_back(offset); // todo: Don't scroll beyond start
-        let end: usize = match end_iter {
-            Some((index, _)) => index + 1,
-            None => self.stream.len(),
+        let end_index: usize = match end {
+            Some((i, _)) => i,
+            None => self.scroller.max_lines,
         };
 
-        &self.stream[start..end]
+        &self.stream[start_index..end_index]
     }
 
+    pub fn scroll_up(&mut self) {
+        self.scroller.scroll_up();
+    }
+
+    pub fn scroll_down(&mut self) {
+        self.scroller.scroll_down(&self.stream);
+    }
+
+    #[allow(dead_code)]
     pub fn write(&mut self, text: &str) {
         self.stream.push_str(text);
     }
@@ -40,5 +53,6 @@ impl Console {
         self.stream.reserve(text.len() + 1);
         self.stream.push_str(text);
         self.stream.push('\n');
+        println!("console stream is now: {}", self.stream);
     }
 }

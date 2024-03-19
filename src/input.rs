@@ -1,36 +1,15 @@
+use std::collections::HashMap;
+
 use raylib::{
     consts::{KeyboardKey, MouseButton},
     RaylibHandle,
 };
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq, Debug)]
 pub enum Input {
     CreateNode,
     IncrementGate,
     DecrementGate,
-}
-
-impl Input {
-    pub const fn len() -> usize {
-        // todo: surely there's a standardized way to do this...
-        return 3;
-    }
-
-    pub const fn variants() -> [Input; Input::len()] {
-        use Input::*;
-        // todo: surely there's a standardized way to do this...
-        [CreateNode, IncrementGate, DecrementGate]
-    }
-
-    const fn bind_index(&self) -> usize {
-        use Input::*;
-        // todo: make this more programatic
-        match *self {
-            CreateNode => 0,
-            IncrementGate => 1,
-            DecrementGate => 2,
-        }
-    }
 }
 
 enum ScrollDirection {
@@ -38,25 +17,31 @@ enum ScrollDirection {
     Negative,
 }
 
-enum InputBind {
-    Scroll(ScrollDirection),
+#[allow(dead_code)]
+enum KeyBind {
+    /// Scrollwheel
+    Whl(ScrollDirection),
+
+    /// Keyboard key
     Key(KeyboardKey),
+
+    /// Mouse button
     Btn(MouseButton),
 }
 
 impl Input {
-    fn default_binding(&self) -> InputBind {
-        use {Input::*, InputBind::*};
+    const fn default_binding(&self) -> KeyBind {
+        use {Input::*, KeyBind::*};
         match *self {
             CreateNode => Btn(MouseButton::MOUSE_LEFT_BUTTON),
-            IncrementGate => Scroll(ScrollDirection::Positive),
-            DecrementGate => Scroll(ScrollDirection::Negative),
+            IncrementGate => Whl(ScrollDirection::Positive),
+            DecrementGate => Whl(ScrollDirection::Negative),
         }
     }
 }
 
 pub struct InputHandler {
-    bindings: [InputBind; Input::len()],
+    bindings: HashMap<Input, KeyBind>,
 }
 
 const _INPUT_CONFIG_FILENAME: &str = "keybinds.config";
@@ -64,22 +49,13 @@ const _INPUT_CONFIG_FILENAME: &str = "keybinds.config";
 impl InputHandler {
     pub fn new() -> Self {
         use Input::*;
-        // todo: idiomatically associate each enum with a value
         Self {
-            bindings: [
-                CreateNode.default_binding(),
-                IncrementGate.default_binding(),
-                DecrementGate.default_binding(),
-            ],
+            bindings: HashMap::from([
+                (CreateNode, CreateNode.default_binding()),
+                (IncrementGate, IncrementGate.default_binding()),
+                (DecrementGate, DecrementGate.default_binding()),
+            ]),
         }
-    }
-
-    fn set_binding(&mut self, input: Input, bind: InputBind) {
-        self.bindings[input.bind_index()] = bind;
-    }
-
-    fn get_binding<'idk>(&'idk self, input: Input) -> &'idk InputBind {
-        &self.bindings[input.bind_index()]
     }
 
     fn is_scrolled(rl: &RaylibHandle, dir: &ScrollDirection) -> bool {
@@ -89,35 +65,52 @@ impl InputHandler {
         }
     }
 
-    pub fn is_pressed(&self, rl: &RaylibHandle, id: Input) -> bool {
-        match self.get_binding(id) {
-            InputBind::Scroll(dir) => InputHandler::is_scrolled(rl, dir),
-            InputBind::Key(key) => rl.is_key_pressed(*key),
-            InputBind::Btn(btn) => rl.is_mouse_button_pressed(*btn),
+    /// Tells whether the Input has been pressed since last checked.
+    ///
+    /// # Example
+    /// ```no_run
+    /// let (mut rl, thread) = raylib::init().size(640, 480).title("Test").build();
+    /// let handler = InputHandler::new();
+    ///
+    /// let pressed: bool = handler.is_pressed(&rl, &Input::CreateNode);
+    /// ```
+    pub fn is_pressed(&self, rl: &RaylibHandle, id: &Input) -> bool {
+        use KeyBind::*;
+        match self.bindings.get(id) {
+            Some(Whl(dir)) => InputHandler::is_scrolled(rl, dir),
+            Some(Key(key)) => rl.is_key_pressed(*key),
+            Some(Btn(btn)) => rl.is_mouse_button_pressed(*btn),
+            None => panic!("Missing input binding"),
         }
     }
 
-    pub fn is_down(&self, rl: &RaylibHandle, id: Input) -> bool {
-        match self.get_binding(id) {
-            InputBind::Scroll(dir) => InputHandler::is_scrolled(rl, dir),
-            InputBind::Key(key) => rl.is_key_down(*key),
-            InputBind::Btn(btn) => rl.is_mouse_button_down(*btn),
+    pub fn _is_down(&self, rl: &RaylibHandle, id: &Input) -> bool {
+        use KeyBind::*;
+        match self.bindings.get(id) {
+            Some(Whl(dir)) => InputHandler::is_scrolled(rl, dir),
+            Some(Key(key)) => rl.is_key_down(*key),
+            Some(Btn(btn)) => rl.is_mouse_button_down(*btn),
+            None => panic!("Missing input binding"),
         }
     }
 
-    pub fn is_up(&self, rl: &RaylibHandle, id: Input) -> bool {
-        match self.get_binding(id) {
-            InputBind::Scroll(dir) => InputHandler::is_scrolled(rl, dir),
-            InputBind::Key(key) => rl.is_key_up(*key),
-            InputBind::Btn(btn) => rl.is_mouse_button_up(*btn),
+    pub fn _is_up(&self, rl: &RaylibHandle, id: &Input) -> bool {
+        use KeyBind::*;
+        match self.bindings.get(id) {
+            Some(Whl(dir)) => InputHandler::is_scrolled(rl, dir),
+            Some(Key(key)) => rl.is_key_up(*key),
+            Some(Btn(btn)) => rl.is_mouse_button_up(*btn),
+            None => panic!("Missing input binding"),
         }
     }
 
-    pub fn is_released(&self, rl: &RaylibHandle, id: Input) -> bool {
-        match self.get_binding(id) {
-            InputBind::Scroll(dir) => InputHandler::is_scrolled(rl, dir),
-            InputBind::Key(key) => rl.is_key_released(*key),
-            InputBind::Btn(btn) => rl.is_mouse_button_released(*btn),
+    pub fn _is_released(&self, rl: &RaylibHandle, id: &Input) -> bool {
+        use KeyBind::*;
+        match self.bindings.get(id) {
+            Some(Whl(dir)) => InputHandler::is_scrolled(rl, dir),
+            Some(Key(key)) => rl.is_key_released(*key),
+            Some(Btn(btn)) => rl.is_mouse_button_released(*btn),
+            None => panic!("Missing input binding"),
         }
     }
 }

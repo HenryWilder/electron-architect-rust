@@ -1,6 +1,6 @@
-use crate::node::Node;
+use crate::common_traits::Scrollable;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Elbow {
     Horizontal,
     Vertical,
@@ -8,8 +8,8 @@ pub enum Elbow {
     DiagonalLast,
 }
 
-impl Elbow {
-    pub fn next(&self) -> Self {
+impl Scrollable for Elbow {
+    fn next(&self) -> Self {
         use Elbow::*;
         match *self {
             Horizontal => DiagonalLast,
@@ -19,29 +19,13 @@ impl Elbow {
         }
     }
 
-    pub fn prev(&self) -> Self {
+    fn prev(&self) -> Self {
         use Elbow::*;
         match *self {
             Horizontal => DiagonalFirst,
             DiagonalLast => Horizontal,
             Vertical => DiagonalLast,
             DiagonalFirst => Vertical,
-        }
-    }
-}
-
-pub struct Wire {
-    pub input: *mut Node,
-    pub output: *mut Node,
-    pub elbow: Elbow,
-}
-
-impl Wire {
-    pub fn new(input: *mut Node, output: *mut Node, elbow: Elbow) -> Self {
-        Self {
-            input,
-            output,
-            elbow,
         }
     }
 }

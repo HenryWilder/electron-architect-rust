@@ -1,5 +1,10 @@
+pub mod elbow;
+pub mod gate;
+pub mod node;
+pub mod wire;
+
 use crate::coords::Coords;
-use crate::node::{Gate, Node};
+use crate::graph::{gate::Gate, node::Node};
 
 pub struct Graph {
     nodes: Vec<Node>,
