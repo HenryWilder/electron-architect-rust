@@ -11,7 +11,7 @@ impl Graph {
     }
 
     // Returns true on success
-    pub fn add_node(&mut self, gate: Gate, coords: Coords) {
+    pub fn add_node(&mut self, gate: &Gate, coords: &Coords) {
         self.nodes.push(Node::new(gate, coords));
     }
 }
