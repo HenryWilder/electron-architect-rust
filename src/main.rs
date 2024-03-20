@@ -43,6 +43,7 @@ fn main() {
         // Tick
 
         cursor.update(&rl);
+        console.debug("tick");
 
         if input.is_pressed(&rl, &Input::CreateNode) {
             graph.add_node(&current_gate, &cursor.coords);

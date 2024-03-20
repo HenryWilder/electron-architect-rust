@@ -1,4 +1,4 @@
-use raylib::prelude::*;
+use raylib::{ffi::ColorAlpha, prelude::*};
 
 #[allow(dead_code)]
 #[derive(PartialEq, Eq)]
@@ -26,12 +26,14 @@ struct ConsoleEntry {
     kind: ConsoleEntryType,
     /// Number of duplicates
     dups: usize,
+    dups_changed: bool,
 }
 
 impl ConsoleEntry {
     const FONT_SIZE: i32 = 8;
-    const FONT_SPACE: i32 = 4;
-    const LINE_HEIGHT: i32 = ConsoleEntry::FONT_SIZE + ConsoleEntry::FONT_SPACE;
+    const PADDING: i32 = 4;
+    const HALF_PADDING: i32 = Self::PADDING / 2;
+    const LINE_HEIGHT: i32 = Self::FONT_SIZE + Self::PADDING;
     const MAX_DUPLICATES: usize = 99; // after this we just show 99+
     const GUTTER_WIDTH: i32 = 24;
 
@@ -40,6 +42,7 @@ impl ConsoleEntry {
             text: s.to_string(),
             kind,
             dups: 0,
+            dups_changed: true, // from null to 0
         }
     }
 
@@ -53,10 +56,21 @@ impl ConsoleEntry {
         }
     }
 
-    fn draw(&self, d: &mut RaylibDrawHandle, x: i32, y: i32) {
+    fn draw(&mut self, d: &mut RaylibDrawHandle, x: i32, y: i32) {
         let color: Color = self.kind.color();
 
         let x_body = x + Self::GUTTER_WIDTH;
+        if self.dups_changed {
+            d.draw_rectangle(
+                x - Self::HALF_PADDING,
+                y - Self::HALF_PADDING,
+                Self::GUTTER_WIDTH,
+                Self::LINE_HEIGHT,
+                color.fade(0.25),
+            );
+            self.dups_changed = false;
+        }
+
         d.draw_text(&self.text, x_body, y, Self::FONT_SIZE, color);
 
         if self.dups > 0 {
@@ -73,6 +87,7 @@ impl ConsoleEntry {
     }
 
     fn incr_dups(&mut self) {
+        self.dups_changed = true;
         if self.dups <= Self::MAX_DUPLICATES {
             self.dups += 1;
         }
@@ -95,10 +110,10 @@ impl Console {
         }
     }
 
-    pub fn draw(&self, d: &mut RaylibDrawHandle) {
-        let visible_entries: Vec<&ConsoleEntry> = self
+    pub fn draw(&mut self, d: &mut RaylibDrawHandle) {
+        let visible_entries: Vec<&mut ConsoleEntry> = self
             .entries
-            .iter()
+            .iter_mut()
             .skip(self.start_entry)
             .take(Console::MAX_LINES)
             .collect();
