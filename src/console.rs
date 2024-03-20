@@ -1,4 +1,4 @@
-use raylib::{ffi::ColorAlpha, prelude::*};
+use raylib::prelude::*;
 
 #[allow(dead_code)]
 #[derive(PartialEq, Eq)]
