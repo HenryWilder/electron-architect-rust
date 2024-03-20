@@ -1,7 +1,4 @@
-use crate::{
-    coords::Coords,
-    graph::{gate::Gate, wire::Wire},
-};
+use crate::{coords::Coords, graph::gate::Gate};
 
 pub struct Node {
     pub gate: Gate,

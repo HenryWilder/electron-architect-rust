@@ -5,7 +5,6 @@ mod coords;
 mod cursor;
 mod graph;
 mod input;
-mod text_scroller;
 
 #[allow(unused_imports)]
 use {
@@ -38,7 +37,7 @@ fn main() {
     let mut current_gate = Gate::G1(Gate1::Buffer);
     let mut cursor: Cursor = Cursor::new();
 
-    console.writeln("Hello world!");
+    console.log("Hello world!");
 
     while !rl.window_should_close() {
         // Tick
@@ -47,8 +46,7 @@ fn main() {
 
         if input.is_pressed(&rl, &Input::CreateNode) {
             graph.add_node(&current_gate, &cursor.coords);
-            console.writeln("Added node");
-            println!("Added node");
+            console.log("Added node");
         }
 
         if input.is_pressed(&rl, &Input::IncrementGate) {
@@ -66,7 +64,7 @@ fn main() {
         let mut d = rl.begin_drawing(&thread);
         d.clear_background(Color::BLACK);
 
-        d.draw_text(console.read(), 12, 12, 8, Color::BLUE);
+        console.draw(&mut d);
 
         cursor.draw(&mut d);
     }

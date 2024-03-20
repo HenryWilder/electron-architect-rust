@@ -21,7 +21,7 @@ impl Coords {
     pub const GRID_SIZE: f32 = 8.0;
 
     /// Converts grid coordinates to world vector
-    pub fn into_position(&self) -> Vector2 {
+    pub fn into_position(self) -> Vector2 {
         Vector2 {
             x: self.x as f32 * Coords::GRID_SIZE,
             y: self.y as f32 * Coords::GRID_SIZE,
