@@ -1,11 +1,12 @@
+/// Both incrementable and decrementable.
 pub trait Scrollable {
-    /// Get the next value for the object
+    /// Get the next value for the object.
     fn next(&self) -> Self;
 
-    /// Get the previous value for the object
+    /// Get the previous value for the object.
     fn prev(&self) -> Self;
 
-    /// Set the object's value to that of `next()`
+    /// Set the object's value to that of `next()`.
     fn incr(&mut self)
     where
         Self: Sized,
@@ -13,7 +14,7 @@ pub trait Scrollable {
         *self = self.next();
     }
 
-    /// Set the object's value to that of `prev()`
+    /// Set the object's value to that of `prev()`.
     fn decr(&mut self)
     where
         Self: Sized,
