@@ -26,6 +26,7 @@ struct ConsoleEntry {
     kind: ConsoleEntryType,
     /// Number of duplicates
     dups: usize,
+    /// Whether `dups` changed since last draw
     dups_changed: bool,
 }
 
@@ -137,6 +138,7 @@ impl Console {
         self.start_entry = self.start_entry.saturating_add(1).min(max_start);
     }
 
+    /// Add a log/warning/error/debug to the console.
     fn push_entry(&mut self, text: &str, kind: ConsoleEntryType) {
         if let Some(most_recent) = self.entries.last_mut() {
             if most_recent.is_duplicate(text, &kind) {
@@ -165,5 +167,60 @@ impl Console {
     #[allow(dead_code)]
     pub fn debug(&mut self, text: &str) {
         self.push_entry(text, ConsoleEntryType::Debug);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_console() {
+        let console = Console::new();
+        assert_eq!(console.entries.len(), 0);
+    }
+
+    #[test]
+    fn test_add_log() {
+        let mut console = Console::new();
+
+        console.log("Hello world");
+        assert_eq!(console.entries.len(), 1);
+    }
+
+    #[test]
+    fn test_add_duplicate_logs() {
+        let mut console = Console::new();
+
+        const TEST_STRING: &str = "Apple";
+
+        console.log(TEST_STRING);
+        assert_eq!(console.entries.len(), 1);
+        assert_eq!(console.entries.last().unwrap().dups, 0);
+
+        console.log(TEST_STRING);
+        assert_eq!(console.entries.len(), 1);
+        assert_eq!(console.entries.last().unwrap().dups, 1);
+
+        console.log(TEST_STRING);
+        assert_eq!(console.entries.len(), 1);
+        assert_eq!(console.entries.last().unwrap().dups, 2);
+    }
+
+    #[test]
+    fn test_add_unique_logs() {
+        let mut console = Console::new();
+
+        const TEST_STRING_A: &str = "Apple";
+        const TEST_STRING_B: &str = "Banana";
+        assert_ne!(TEST_STRING_A, TEST_STRING_B);
+
+        console.log(TEST_STRING_A);
+        assert_eq!(console.entries.len(), 1);
+        assert_eq!(console.entries.last().unwrap().dups, 0);
+
+        console.log(TEST_STRING_B);
+        assert_eq!(console.entries.len(), 2);
+        assert_eq!(console.entries.last().unwrap().dups, 0);
     }
 }

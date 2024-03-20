@@ -29,6 +29,7 @@ fn main() {
         .vsync()
         .build();
 
+    rl.set_target_fps(244);
     rl.hide_cursor();
 
     let input = InputHandler::new();
