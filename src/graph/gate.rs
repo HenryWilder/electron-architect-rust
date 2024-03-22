@@ -1,4 +1,6 @@
-use crate::common_traits::Scrollable;
+use raylib::prelude::*;
+
+use crate::{common_traits::Scrollable, coords::Coords};
 use std::fmt::{self, Formatter};
 
 pub trait GateIn {
@@ -184,5 +186,15 @@ impl Scrollable for Gate {
             G1(gate_1) => Gate::G1(gate_1.prev()),
             GN(gate_n) => Gate::GN(gate_n.prev()),
         }
+    }
+}
+
+impl Gate {
+    pub fn draw_v(&self, d: &mut RaylibDrawHandle, center: &Vector2, color: Color) {
+        d.draw_circle_v(center, Coords::GRID_SIZE / 2.0, color)
+    }
+
+    pub fn draw(&self, d: &mut RaylibDrawHandle, coords: &Coords, color: Color) {
+        self.draw_v(d, &coords.into_position(), color);
     }
 }

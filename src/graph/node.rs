@@ -1,5 +1,7 @@
 use crate::{coords::Coords, graph::gate::Gate};
 
+use raylib::prelude::*;
+
 pub struct Node {
     pub gate: Gate,
     pub coords: Coords,
@@ -11,6 +13,10 @@ impl Node {
             gate: gate.clone(),
             coords: coords.clone(),
         }
+    }
+
+    pub fn draw(&self, d: &mut RaylibDrawHandle) {
+        self.gate.draw(d, &self.coords, Color::GRAY);
     }
 }
 

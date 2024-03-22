@@ -22,9 +22,21 @@ use {
     input::{Input, InputHandler},
 };
 
+fn draw_grid(d: &mut RaylibDrawHandle, width: i32, height: i32) {
+    for x in (0..width).step_by(Coords::GRID_SIZE as usize) {
+        d.draw_line(x, 0, x, height, Color::DARKGRAY);
+    }
+    for y in (0..height).step_by(Coords::GRID_SIZE as usize) {
+        d.draw_line(0, y, width, y, Color::DARKGRAY);
+    }
+}
+
 fn main() {
+    let window_width: i32 = 1280;
+    let window_height: i32 = 720;
+
     let (mut rl, thread) = raylib::init()
-        .size(1280, 720)
+        .size(window_width, window_height)
         .title("Electron Architect")
         .vsync()
         .build();
@@ -38,36 +50,45 @@ fn main() {
     let mut current_gate = Gate::G1(Gate1::Buffer);
     let mut cursor: Cursor = Cursor::new();
 
+    let mut hovered_node: Option<&Node> = None;
+    let mut current_node: Option<&Node> = None;
+
     console.log("Hello world!");
 
     while !rl.window_should_close() {
         // Tick
 
         cursor.update(&rl);
-        console.debug("tick");
+
+        hovered_node = graph.find_node_at_coords(&cursor.coords);
 
         if input.is_pressed(&rl, &Input::CreateNode) {
             graph.add_node(&current_gate, &cursor.coords);
-            console.log("Added node");
+            console.log(format!("Created node at {}", cursor.coords));
         }
 
         if input.is_pressed(&rl, &Input::IncrementGate) {
             current_gate.incr();
             console.scroll_up();
-        }
-
-        if input.is_pressed(&rl, &Input::DecrementGate) {
+        } else if input.is_pressed(&rl, &Input::DecrementGate) {
             current_gate.decr();
             console.scroll_down();
         }
 
         // Draw
+        {
+            let mut d = rl.begin_drawing(&thread);
+            d.clear_background(Color::BLACK);
 
-        let mut d = rl.begin_drawing(&thread);
-        d.clear_background(Color::BLACK);
+            draw_grid(&mut d, window_width, window_height);
 
-        console.draw(&mut d);
+            graph.draw(&mut d);
 
-        cursor.draw(&mut d);
+            current_gate.draw(&mut d, &cursor.coords, Color::BLUE);
+
+            console.draw(&mut d);
+
+            cursor.draw(&mut d);
+        }
     }
 }

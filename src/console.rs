@@ -38,9 +38,9 @@ impl ConsoleEntry {
     const MAX_DUPLICATES: usize = 99; // after this we just show 99+
     const GUTTER_WIDTH: i32 = 24;
 
-    fn new(s: &str, kind: ConsoleEntryType) -> Self {
+    fn new(s: String, kind: ConsoleEntryType) -> Self {
         Self {
-            text: s.to_string(),
+            text: s,
             kind,
             dups: 0,
             dups_changed: true, // from null to 0
@@ -83,8 +83,8 @@ impl ConsoleEntry {
         self.text.lines().count()
     }
 
-    fn is_duplicate(&self, prop_text: &str, prop_kind: &ConsoleEntryType) -> bool {
-        (self.kind == *prop_kind) && (self.text == prop_text)
+    fn is_duplicate(&self, prop_text: &String, prop_kind: &ConsoleEntryType) -> bool {
+        (self.kind == *prop_kind) && (&self.text == prop_text)
     }
 
     fn incr_dups(&mut self) {
@@ -139,9 +139,9 @@ impl Console {
     }
 
     /// Add a log/warning/error/debug to the console.
-    fn push_entry(&mut self, text: &str, kind: ConsoleEntryType) {
+    fn push_entry(&mut self, text: String, kind: ConsoleEntryType) {
         if let Some(most_recent) = self.entries.last_mut() {
-            if most_recent.is_duplicate(text, &kind) {
+            if most_recent.is_duplicate(&text, &kind) {
                 most_recent.incr_dups();
                 return;
             }
@@ -150,23 +150,35 @@ impl Console {
         self.scroll_down();
     }
 
-    pub fn log(&mut self, text: &str) {
-        self.push_entry(text, ConsoleEntryType::Log);
+    pub fn log<S>(&mut self, text: S)
+    where
+        S: Into<String>,
+    {
+        self.push_entry(text.into(), ConsoleEntryType::Log);
     }
 
     #[allow(dead_code)]
-    pub fn warn(&mut self, text: &str) {
-        self.push_entry(text, ConsoleEntryType::Warning);
+    pub fn warn<S>(&mut self, text: S)
+    where
+        S: Into<String>,
+    {
+        self.push_entry(text.into(), ConsoleEntryType::Warning);
     }
 
     #[allow(dead_code)]
-    pub fn err(&mut self, text: &str) {
-        self.push_entry(text, ConsoleEntryType::Error);
+    pub fn err<S>(&mut self, text: S)
+    where
+        S: Into<String>,
+    {
+        self.push_entry(text.into(), ConsoleEntryType::Error);
     }
 
     #[allow(dead_code)]
-    pub fn debug(&mut self, text: &str) {
-        self.push_entry(text, ConsoleEntryType::Debug);
+    pub fn debug<S>(&mut self, text: S)
+    where
+        S: Into<String>,
+    {
+        self.push_entry(text.into(), ConsoleEntryType::Debug);
     }
 }
 

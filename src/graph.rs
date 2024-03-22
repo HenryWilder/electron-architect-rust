@@ -3,21 +3,52 @@ pub mod gate;
 pub mod node;
 pub mod wire;
 
+use raylib::prelude::*;
+
 use crate::coords::Coords;
-use crate::graph::{gate::Gate, node::Node};
+use crate::graph::{gate::Gate, node::Node, wire::Wire};
 
 pub struct Graph {
     nodes: Vec<Node>,
+    wires: Vec<Wire>,
 }
 
 impl Graph {
     pub fn new() -> Self {
-        Self { nodes: Vec::new() }
+        Self {
+            nodes: Vec::new(),
+            wires: Vec::new(),
+        }
     }
 
     // Returns true on success
     pub fn add_node(&mut self, gate: &Gate, coords: &Coords) {
         self.nodes.push(Node::new(gate, coords));
+    }
+
+    pub fn draw(&self, d: &mut RaylibDrawHandle) {
+        for node in &self.nodes {
+            node.draw(d);
+        }
+    }
+
+    pub fn find_node_at_coords(&self, search_coords: &Coords) -> Option<&Node> {
+        for node in &self.nodes {
+            if node.coords == *search_coords {
+                return Some(&node);
+            }
+        }
+        return None;
+    }
+
+    #[allow(dead_code)]
+    pub fn find_wire_intersecting_coords(&self, search_coords: &Coords) -> Option<&Wire> {
+        for wire in &self.wires {
+            if wire.is_intersecting_coords(search_coords) {
+                return Some(&wire);
+            }
+        }
+        return None;
     }
 }
 
