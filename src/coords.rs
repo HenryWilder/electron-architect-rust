@@ -106,7 +106,6 @@ mod tests {
 
         #[test]
         fn test_zero_len() {
-            let mut tests = 0;
             for x in -1..1 {
                 for y in -1..1 {
                     let coords = Coords { x, y };
@@ -121,15 +120,11 @@ mod tests {
                             };
 
                             let overlapping = test_coords.is_intersecting_coords(&coords, &coords);
-                            println!("test: {test_coords:width$}, start: {coords:width$}, end: {coords:width$}, expected: {expected}, got: {overlapping}", width = 2);
                             assert_eq!(overlapping, expected, "test: {test_coords}, start: {coords}, end: {coords}, expected: {expected}, got: {overlapping}");
-
-                            tests += 1;
                         }
                     }
                 }
             }
-            println!("Conducted {tests} tests.");
         }
 
         #[test]
