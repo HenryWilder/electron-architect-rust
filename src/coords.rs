@@ -59,9 +59,13 @@ impl Coords {
 
         let dx = end.x - start.x;
         let dy = end.y - start.y;
-        assert_eq!((dx.abs(), dy.abs()), (1, 1));
+        assert_ne!(dx.abs(), 0); // Non-zero width
+        assert_ne!(dy.abs(), 0); // Non-zero height
+        assert_eq!(dx.abs(), dy.abs()); // Equal width and height
 
-        let m = dx * dy;
+        // Both are negative or both are positive = positive slope. One is negative and one is positive = negative slope.
+        // Because the diagonal lines are ALWAYS at a 45 degree angle, the slope will ALWAYS have a magnitude of 1.
+        let m = if dx == dy { 1 } else { -1 };
         let b = start.y - m * start.x;
         return self.y == m * self.x + b;
     }
@@ -153,17 +157,51 @@ mod tests {
         fn test_midpoint() {
             for x1 in -1..1 {
                 for y1 in -1..1 {
-                    let start = Coords { x: x1, y: y1 };
+                    let start = Coords {
+                        x: x1 * 2,
+                        y: y1 * 2,
+                    };
 
                     for x2 in -1..1 {
                         for y2 in -1..1 {
-                            let end = Coords { x: x2, y: y2 };
+                            let end = Coords {
+                                x: x2 * 2,
+                                y: y2 * 2,
+                            };
 
-                            let inclusive_start = start.is_intersecting_coords(&start, &end);
-                            assert_eq!(inclusive_start, true, "test: {start}, start: {start}, end: {end}, expected: true, got: false");
+                            let midpoint = Coords {
+                                x: (start.x + end.x) / 2,
+                                y: (start.y + end.y) / 2,
+                            };
 
-                            let inclusive_end = end.is_intersecting_coords(&start, &end);
-                            assert_eq!(inclusive_end, true, "test: {end}, start: {start}, end: {end}, expected: true, got: false");
+                            let overlapping = midpoint.is_intersecting_coords(&start, &end);
+                            assert_eq!(overlapping, true, "test: {midpoint}, start: {start}, end: {end}, expected: true, got: {overlapping}");
+
+                            // Perpendicular point
+                            let perp: Coords;
+
+                            if x1 == x2 {
+                                // vertical
+                                perp = Coords {
+                                    x: midpoint.x + 1,
+                                    y: midpoint.y,
+                                };
+                            } else if y1 == y2 {
+                                // horizontal
+                                perp = Coords {
+                                    x: midpoint.x,
+                                    y: midpoint.y + 1,
+                                };
+                            } else {
+                                // diagonal
+                                perp = Coords {
+                                    x: start.x,
+                                    y: end.y,
+                                };
+                            }
+
+                            let result = perp.is_intersecting_coords(&start, &end);
+                            assert_eq!(result, false, "test: {perp}, start: {start}, end: {end}, expected: false, got: {result}");
                         }
                     }
                 }
