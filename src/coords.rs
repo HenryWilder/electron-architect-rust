@@ -51,7 +51,7 @@ impl Coords {
 
         // Vertical or horizontal line
         if start.x == end.x || start.y == end.y {
-            assert_eq!(is_in_bounds, true);
+            assert!(is_in_bounds);
             return true;
         }
 
@@ -67,7 +67,7 @@ impl Coords {
         // Because the diagonal lines are ALWAYS at a 45 degree angle, the slope will ALWAYS have a magnitude of 1.
         let m = if dx == dy { 1 } else { -1 };
         let b = start.y - m * start.x;
-        return self.y == m * self.x + b;
+        self.y == m * self.x + b
     }
 }
 

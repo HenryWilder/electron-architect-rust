@@ -57,7 +57,11 @@ impl ConsoleEntry {
         }
     }
 
-    fn draw(&mut self, d: &mut RaylibDrawHandle, x: i32, y: i32) {
+    fn clear_dups_changed(&mut self) {
+        self.dups_changed = false;
+    }
+
+    fn draw(&self, d: &mut RaylibDrawHandle, x: i32, y: i32) {
         let color: Color = self.kind.color();
 
         let x_body = x + Self::GUTTER_WIDTH;
@@ -69,7 +73,6 @@ impl ConsoleEntry {
                 Self::LINE_HEIGHT,
                 color.fade(0.25),
             );
-            self.dups_changed = false;
         }
 
         d.draw_text(&self.text, x_body, y, Self::FONT_SIZE, color);
@@ -93,6 +96,10 @@ impl ConsoleEntry {
             self.dups += 1;
         }
     }
+
+    fn height(&self) -> i32 {
+        self.num_lines() as i32 * ConsoleEntry::LINE_HEIGHT
+    }
 }
 
 pub struct Console {
@@ -103,6 +110,10 @@ pub struct Console {
 impl Console {
     /// Maximum lines visible in the console at a time (it can hold more)
     const MAX_LINES: usize = 10;
+    const INSET_X: i32 = 12;
+    const INSET_Y: i32 = 12;
+    const VISIBLE_WIDTH: i32 = 200;
+    const VISIBLE_HEIGHT: i32 = Self::MAX_LINES as i32 * ConsoleEntry::LINE_HEIGHT;
 
     pub fn new() -> Self {
         Self {
@@ -111,21 +122,37 @@ impl Console {
         }
     }
 
-    pub fn draw(&mut self, d: &mut RaylibDrawHandle) {
-        let visible_entries: Vec<&mut ConsoleEntry> = self
-            .entries
+    fn visible_entries_mut(&mut self) -> Vec<&mut ConsoleEntry> {
+        let mut lines_added: usize = 0;
+        self.entries
             .iter_mut()
             .skip(self.start_entry)
-            .take(Console::MAX_LINES)
-            .collect();
+            .take_while(|entry| {
+                lines_added += entry.num_lines();
+                lines_added < Console::MAX_LINES
+            })
+            .collect()
+    }
 
+    fn visible_entries(&self) -> Vec<&ConsoleEntry> {
+        let mut lines_added: usize = 0;
+        self.entries
+            .iter()
+            .skip(self.start_entry)
+            .take_while(|&entry| {
+                lines_added += entry.num_lines();
+                lines_added < Console::MAX_LINES
+            })
+            .collect()
+    }
+
+    pub fn draw(&mut self, d: &mut RaylibDrawHandle) {
         let x: i32 = 12;
         let mut y: i32 = 12;
-        for entry in visible_entries {
+        for entry in self.visible_entries_mut() {
             entry.draw(d, x, y);
-
-            let height: i32 = (entry.num_lines() as i32) * ConsoleEntry::LINE_HEIGHT;
-            y += height;
+            entry.clear_dups_changed();
+            y += entry.height();
         }
     }
 
@@ -140,14 +167,23 @@ impl Console {
 
     /// Add a log/warning/error/debug to the console.
     fn push_entry(&mut self, text: String, kind: ConsoleEntryType) {
+        // Duplicate entry
         if let Some(most_recent) = self.entries.last_mut() {
             if most_recent.is_duplicate(&text, &kind) {
                 most_recent.incr_dups();
                 return;
             }
         }
+
+        // Unique entry
         self.entries.push(ConsoleEntry::new(text, kind));
         self.scroll_down();
+
+        // Long entry
+        if self.entries.last().unwrap().text.lines().count() > Self::MAX_LINES {
+            self.warn("Previous entry contains too many lines to display fully");
+            self.scroll_down();
+        }
     }
 
     pub fn log<S>(&mut self, text: S)
@@ -179,6 +215,15 @@ impl Console {
         S: Into<String>,
     {
         self.push_entry(text.into(), ConsoleEntryType::Debug);
+    }
+
+    pub fn bounding_box(&self) -> Rectangle {
+        Rectangle {
+            x: Self::INSET_X as f32,
+            y: Self::INSET_Y as f32,
+            width: Self::VISIBLE_WIDTH as f32,
+            height: Self::VISIBLE_HEIGHT as f32,
+        }
     }
 }
 

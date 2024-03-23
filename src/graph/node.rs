@@ -11,7 +11,7 @@ impl Node {
     pub fn new(gate: &Gate, coords: &Coords) -> Self {
         Self {
             gate: gate.clone(),
-            coords: coords.clone(),
+            coords: *coords,
         }
     }
 

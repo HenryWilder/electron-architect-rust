@@ -8,8 +8,11 @@ use raylib::{
 #[derive(Hash, PartialEq, Eq, Debug)]
 pub enum Input {
     CreateNode,
+    DestroyHovered,
     IncrementGate,
     DecrementGate,
+    IncrementElbow,
+    DecrementElbow,
 }
 
 enum ScrollDirection {
@@ -34,8 +37,9 @@ impl Input {
         use {Input::*, KeyBind::*};
         match *self {
             CreateNode => Btn(MouseButton::MOUSE_LEFT_BUTTON),
-            IncrementGate => Whl(ScrollDirection::Positive),
-            DecrementGate => Whl(ScrollDirection::Negative),
+            DestroyHovered => Btn(MouseButton::MOUSE_RIGHT_BUTTON),
+            IncrementGate | IncrementElbow => Whl(ScrollDirection::Positive),
+            DecrementGate | DecrementElbow => Whl(ScrollDirection::Negative),
         }
     }
 }
@@ -46,14 +50,23 @@ pub struct InputHandler {
 
 const _INPUT_CONFIG_FILENAME: &str = "keybinds.config";
 
+macro_rules! input_bind_default_entry {
+    ($variant:ident) => {
+        ($variant, $variant.default_binding())
+    };
+}
+
 impl InputHandler {
     pub fn new() -> Self {
         use Input::*;
         Self {
             bindings: HashMap::from([
-                (CreateNode, CreateNode.default_binding()),
-                (IncrementGate, IncrementGate.default_binding()),
-                (DecrementGate, DecrementGate.default_binding()),
+                input_bind_default_entry!(CreateNode),
+                input_bind_default_entry!(DestroyHovered),
+                input_bind_default_entry!(IncrementGate),
+                input_bind_default_entry!(DecrementGate),
+                input_bind_default_entry!(IncrementElbow),
+                input_bind_default_entry!(DecrementElbow),
             ]),
         }
     }

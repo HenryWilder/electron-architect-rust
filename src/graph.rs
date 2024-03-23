@@ -6,14 +6,14 @@ pub mod wire;
 use raylib::prelude::*;
 
 use crate::coords::Coords;
-use crate::graph::{gate::Gate, node::Node, wire::Wire};
+use crate::graph::{elbow::Elbow, gate::Gate, node::Node, wire::Wire};
 
-pub struct Graph {
+pub struct Graph<'g> {
     nodes: Vec<Node>,
-    wires: Vec<Wire>,
+    wires: Vec<Wire<'g>>,
 }
 
-impl Graph {
+impl<'g> Graph<'g> {
     pub fn new() -> Self {
         Self {
             nodes: Vec::new(),
@@ -22,8 +22,14 @@ impl Graph {
     }
 
     // Returns true on success
-    pub fn add_node(&mut self, gate: &Gate, coords: &Coords) {
+    pub fn add_node(&mut self, gate: &Gate, coords: &Coords) -> &'g Node {
         self.nodes.push(Node::new(gate, coords));
+        self.nodes.last().unwrap() // If we didn't make a new node, something is wrong and we should panic.
+    }
+
+    pub fn add_wire(&mut self, src: &'g Node, dest: &'g Node, elbow: &Elbow) -> &'g Wire {
+        self.wires.push(Wire::new(src, dest, elbow));
+        self.wires.last().unwrap()
     }
 
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
@@ -32,23 +38,17 @@ impl Graph {
         }
     }
 
-    pub fn find_node_at_coords(&self, search_coords: &Coords) -> Option<&Node> {
-        for node in &self.nodes {
-            if node.coords == *search_coords {
-                return Some(&node);
-            }
-        }
-        return None;
+    pub fn find_node_at_coords(&self, search_coords: &Coords) -> Option<&'g Node> {
+        self.nodes
+            .iter()
+            .find(|&node| node.coords == *search_coords)
     }
 
     #[allow(dead_code)]
-    pub fn find_wire_intersecting_coords(&self, search_coords: &Coords) -> Option<&Wire> {
-        for wire in &self.wires {
-            if wire.is_intersecting_coords(search_coords) {
-                return Some(&wire);
-            }
-        }
-        return None;
+    pub fn find_wire_intersecting_coords(&self, search_coords: &Coords) -> Option<&'g Wire> {
+        self.wires
+            .iter()
+            .find(|&wire| wire.is_intersecting_coords(search_coords))
     }
 }
 

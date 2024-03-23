@@ -2,30 +2,30 @@ use crate::common_traits::Scrollable;
 
 #[derive(Clone, Debug)]
 pub enum Elbow {
-    Horizontal,
-    Vertical,
-    DiagonalFirst,
-    DiagonalLast,
+    HorzS, // Horizontal start
+    VertS, // Vertical start
+    DiagS, // Diagonal start
+    DiagE, // Diagonal end
 }
 
 impl Scrollable for Elbow {
     fn next(&self) -> Self {
         use Elbow::*;
         match *self {
-            Horizontal => DiagonalLast,
-            DiagonalLast => Vertical,
-            Vertical => DiagonalFirst,
-            DiagonalFirst => Horizontal,
+            HorzS => DiagE,
+            DiagE => VertS,
+            VertS => DiagS,
+            DiagS => HorzS,
         }
     }
 
     fn prev(&self) -> Self {
         use Elbow::*;
         match *self {
-            Horizontal => DiagonalFirst,
-            DiagonalLast => Horizontal,
-            Vertical => DiagonalLast,
-            DiagonalFirst => Vertical,
+            HorzS => DiagS,
+            DiagE => HorzS,
+            VertS => DiagE,
+            DiagS => VertS,
         }
     }
 }

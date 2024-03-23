@@ -48,9 +48,11 @@ fn main() {
     let mut console = Console::new();
     let mut graph = Graph::new();
     let mut current_gate = Gate::G1(Gate1::Buffer);
+    let mut current_elbow = Elbow::HorzS;
     let mut cursor: Cursor = Cursor::new();
 
     let mut hovered_node: Option<&Node> = None;
+    let mut hovered_wire: Option<&Wire> = None;
     let mut current_node: Option<&Node> = None;
 
     console.log("Hello world!");
@@ -61,18 +63,36 @@ fn main() {
         cursor.update(&rl);
 
         hovered_node = graph.find_node_at_coords(&cursor.coords);
+        hovered_wire = match hovered_node {
+            None => graph.find_wire_intersecting_coords(&cursor.coords),
+            Some(_) => None,
+        };
 
         if input.is_pressed(&rl, &Input::CreateNode) {
-            graph.add_node(&current_gate, &cursor.coords);
+            let new_node = graph.add_node(&current_gate, &cursor.coords);
+
+            // Chain nodes
+            if current_node.is_some() {
+                graph.add_wire(current_node.unwrap(), new_node, &current_elbow);
+            }
+            current_node = Some(new_node);
             console.log(format!("Created node at {}", cursor.coords));
         }
 
         if input.is_pressed(&rl, &Input::IncrementGate) {
             current_gate.incr();
-            console.scroll_up();
         } else if input.is_pressed(&rl, &Input::DecrementGate) {
             current_gate.decr();
-            console.scroll_down();
+        }
+
+        if input.is_pressed(&rl, &Input::IncrementElbow) {
+            current_elbow.incr();
+        } else if input.is_pressed(&rl, &Input::DecrementElbow) {
+            current_elbow.decr();
+        }
+
+        if (console.bounding_box()).check_collision_point_rec(&cursor.pos) {
+            console.log("Hovering console");
         }
 
         // Draw
