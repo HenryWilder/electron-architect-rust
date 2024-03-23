@@ -207,5 +207,40 @@ mod tests {
                 }
             }
         }
+
+        #[test]
+        fn test_beyond_segment() {
+            for x1 in -1..1 {
+                for y1 in -1..1 {
+                    let start = Coords { x: x1, y: y1 };
+
+                    for x2 in -1..1 {
+                        for y2 in -1..1 {
+                            let end = Coords { x: x2, y: y2 };
+
+                            if start == end {
+                                continue;
+                            }
+
+                            let after_end = Coords {
+                                x: start.x + 2 * (end.x - start.x),
+                                y: start.y + 2 * (end.y - start.y),
+                            };
+
+                            let overlapping1 = after_end.is_intersecting_coords(&start, &end);
+                            assert_eq!(overlapping1, false, "test: {after_end}, start: {start}, end: {end}, expected: false, got: {overlapping1}");
+
+                            let before_start = Coords {
+                                x: end.x + 2 * (start.x - end.x),
+                                y: end.y + 2 * (start.y - end.y),
+                            };
+
+                            let overlapping2 = before_start.is_intersecting_coords(&start, &end);
+                            assert_eq!(overlapping2, false, "test: {before_start}, start: {start}, end: {end}, expected: false, got: {overlapping2}");
+                        }
+                    }
+                }
+            }
+        }
     }
 }
